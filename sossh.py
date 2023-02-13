@@ -22,6 +22,10 @@ class SosFilesystem:
     def _resolve_cmd(self, cmd):
         underscored = " ".join([x for x in cmd.split(" ") if x]).replace(" ", "_")
 
+        print("US", underscored)
+
+        import IPython; IPython.embed()
+
         if underscored not in self._cmds:
             print(f"Unknown command `{cmd}` ({underscored})")
             raise FileNotFoundError
@@ -33,10 +37,17 @@ class SosFilesystem:
         return open(filename).read()
 
     def read_direct(self, filepath):
-        return open(filepath).read()
+        return open(f"{self._path}/{filepath}").read()
 
     def run_cmd(self, cmd):
-        print(self.read_cmd(cmd))
+        try:
+            print(self.read_cmd(cmd))
+        except FileNotFoundError:
+            print(f"Command not found or options required `{cmd}`")
+            cmd = cmd.strip()
+            matching = [ c for c in self._cmds if c.startswith(cmd) ]
+            for m in matching:
+                print(m.replace("_", " "))
 
     def get_cmd_tree(self):
         tree = {}
@@ -52,35 +63,7 @@ class SosFilesystem:
         #print(json.dumps(tree, indent=2))
         return tree
 
-class SosSH:
-
-    #class ARLCompleter:
-    #    def __init__(self,logic):
-    #        self.logic = logic
-    #
-    #    def traverse(self,tokens,tree):
-    #        if not tree:
-    #            return []
-    #        elif len(tokens) == 0:
-    #            return []
-    #        if len(tokens) == 1:
-    #            return [x+' ' for x in tree if x.startswith(tokens[0])]
-    #        else:
-    #            if tokens[0] in tree.keys():
-    #                return self.traverse(tokens[1:],tree[tokens[0]])
-    #            else:
-    #                return []
-    #        return []
-    #
-    #    def complete(self,text,state):
-    #        try:
-    #            tokens = readline.get_line_buffer().split()
-    #            if not tokens or readline.get_line_buffer()[-1] == ' ':
-    #                tokens.append()
-    #            results = self.traverse(tokens,self.logic) + [None]
-    #            return results[state]
-    #        except Exception as e:
-    #            print(e)
+class SosShell:
 
     class Completer:
         _tree = None
@@ -107,7 +90,7 @@ class SosSH:
             words = [x for x in readline.get_line_buffer().split(" ") if x ]
             #print(f"WORDS '{words}'")
             ret = self._walk(words, self._tree) + [None]
-            print(f"RET '{ret}'")
+            #print(f"RET '{ret}'")
             return ret[state]
 
 
@@ -128,7 +111,7 @@ class SosSH:
 
         readline.parse_and_bind("tab: complete")
         readline.set_completer(
-                SosSH.Completer(self._fs.get_cmd_tree()).complete)
+                SosShell.Completer(self._fs.get_cmd_tree()).complete)
 
     def _read_version(self):
         data = self._fs.read_direct("version.txt")
@@ -138,12 +121,15 @@ class SosSH:
         self._hostname = self._fs.read_direct("hostname")[:-1]
 
     def loop(self):
-        print("LOOP!")
         while True:
             try:
                 prompt = f"{self._hostname}) "
                 cmd = input(prompt)
-                self._fs.run_cmd(cmd)
+                if cmd.strip() == "help":
+                    cmds = [ x for x in self._fs.get_cmd_tree().keys()]
+                    print(" ".join(sorted(cmds)))
+                else:
+                    self._fs.run_cmd(cmd)
             except EOFError:
                 print("EOF!")
                 return
@@ -166,6 +152,6 @@ if __name__ == '__main__':
         except FileNotFoundError:
             pass
     else:
-        sh = SosSH(args.sos)
+        sh = SosShell(args.sos)
         cmd_tree = sh._fs.get_cmd_tree()
         sh.loop()
