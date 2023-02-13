@@ -22,19 +22,18 @@ class SosFilesystem:
     def _resolve_cmd(self, cmd):
         underscored = " ".join([x for x in cmd.split(" ") if x]).replace(" ", "_")
 
-        print("US", underscored)
-
-        import IPython; IPython.embed()
-
         if underscored not in self._cmds:
-            print(f"Unknown command `{cmd}` ({underscored})")
+            #print(f"Unknown command `{cmd}` ({underscored})")
             raise FileNotFoundError
 
         return self._cmds.get(underscored)
 
     def read_cmd(self, cmd):
-        filename = self._resolve_cmd(cmd)
-        return open(filename).read()
+        dest = self._resolve_cmd(cmd)
+        if callable(dest):
+            return dest(*cmd.split(" ")[1:])
+        else:
+            return open(dest).read()[:-1]
 
     def read_direct(self, filepath):
         return open(f"{self._path}/{filepath}").read()
@@ -62,6 +61,34 @@ class SosFilesystem:
         #import json
         #print(json.dumps(tree, indent=2))
         return tree
+
+
+class SosfsWrapper(SosFilesystem):
+
+    _internal_cmds = None
+
+    def __init__(self, path):
+
+        super().__init__(path)
+
+        self._internal_cmds = {}
+
+        self._internal_cmds["help"] = self._cmd_help
+        for cmd in self._cmds:
+            cmd0 = cmd.split("_", 1)[0]
+            self._internal_cmds[f"help_{cmd0}"] = lambda x: self._cmd_help(x)
+            #self._internal_cmds[f"help_{cmd}"] = lambda *args: self._cmd_help(x)
+
+        self._cmds.update(self._internal_cmds)
+        print(self._cmds)
+
+    def _cmd_help(self, *args):
+        print("CMDHELP", args)
+        for cmd in sorted(self._cmds.keys()):
+            if cmd.startswith(" ".join(args)):
+                print(" ".join(cmd.split("_")))
+            
+
 
 class SosShell:
 
@@ -101,7 +128,7 @@ class SosShell:
     _fs = None
 
     def __init__(self, path):
-        self._fs = SosFilesystem(path)
+        self._fs = SosfsWrapper(path)
         try:
             self._read_version()
             print(f"Sosreport found: {self._version}")
@@ -125,11 +152,7 @@ class SosShell:
             try:
                 prompt = f"{self._hostname}) "
                 cmd = input(prompt)
-                if cmd.strip() == "help":
-                    cmds = [ x for x in self._fs.get_cmd_tree().keys()]
-                    print(" ".join(sorted(cmds)))
-                else:
-                    self._fs.run_cmd(cmd)
+                self._fs.run_cmd(cmd)
             except EOFError:
                 print("EOF!")
                 return
@@ -143,7 +166,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.command:
-        sosfs = SosFilesystem(args.sos)
+        sosfs = SosFilesystem(args.sos) #SosFilesystem(args.sos)
 
         #sosfs.run("ip -d address")
 
