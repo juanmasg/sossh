@@ -90,5 +90,10 @@ testhost🆘 links
  ├ vlan123      : UP        1500 00:a3:a4:75:85:37  (UP,LOWER_UP)    802.1Q(123)  192.168.10.20/24
  └ vlan456      : UP        1500 00:a4:a4:76:87:24  (UP,LOWER_UP)    802.1Q(456)  10.100.100.1/24
 
+testhost🆘 packages
+Third party packages installed:
+  * Trend Micro Inc.
+    - ds_agent-10.0.0-2048.el8.x86_64
+
 
 ```
