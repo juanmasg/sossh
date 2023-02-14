@@ -45,6 +45,8 @@ optional arguments:
   dependencies
 * `cat`: Display the contents of any file.
 * `tainted`: Display extended tainted information
+* `packages`: Display third party package information
+* `inet`: Display ipv4 info
 
 ### Example
 
