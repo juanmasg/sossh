@@ -78,7 +78,7 @@ ens1f1    10e4d230-9815-4999-aa87-37bfd2da5b80  ethernet  --
 ens2f0    10e4d230-9815-4999-aa87-37bfd2da5b8a  ethernet  --      
 ens2f1    10e4d230-9815-4999-aa87-37bfd2da5b8b  ethernet  --      
 
-bckflo23🆘 links
+testhost🆘 links
  ├ lo           : LOOPBACK 65536 00:00:00:00:00:00  (UP,LOWER_UP)                 127.0.0.1/8
  ├ ens1f0       : DOWN      1500 00:aa:a4:7e:8a:28  (NO-CARRIER,UP)               
  ├ team0        : UP        1500 00:bb:a4:7d:8b:01  (UP,LOWER_UP)                 
