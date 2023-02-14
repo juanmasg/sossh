@@ -3,8 +3,8 @@
 ### Project status
 
 This has just started. Once the main shell functionality is robust enough,
-the plan is to write new commands that perform data pre-processing to
-display insights about the system, replacing the need to display the raw
+the plan is to write new commands that perform data pre-processing and
+display insights about the system, replacing the need to print the raw
 file contents. Think about a python based `xsos` on steroids.
 
 ### Usage
