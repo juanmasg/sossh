@@ -80,15 +80,15 @@ ens2f1    10e4d230-9815-4999-aa87-37bfd2da5b8b  ethernet  --
 
 bckflo23🆘 links
  ├ lo           : LOOPBACK 65536 00:00:00:00:00:00  (UP,LOWER_UP)                 127.0.0.1/8
- ├ ens1f0       : DOWN      1500 00:17:a4:77:80:28  (NO-CARRIER,UP)               
- ├ team0        : UP        1500 00:17:a4:77:80:24  (UP,LOWER_UP)                 
-  ├ eno1        : UP        1500 00:17:a4:77:80:24  (UP,LOWER_UP)                 
-  ├ eno2        : UP        1500 00:17:a4:77:80:24  (UP,LOWER_UP)                 
-  ├ ens2f0      : UP        1500 00:17:a4:77:80:24  (UP,LOWER_UP)                 
-  └ ens2f1      : UP        1500 00:17:a4:77:80:24  (UP,LOWER_UP)                 
- ├ ens1f1       : DOWN      1500 00:17:a4:77:80:2a  (NO-CARRIER,UP)               
- ├ vlan123      : UP        1500 00:17:a4:77:80:24  (UP,LOWER_UP)    802.1Q(123)  192.168.10.20/24
- └ vlan456      : UP        1500 00:17:a4:77:80:24  (UP,LOWER_UP)    802.1Q(456)  10.100.100.1/24
+ ├ ens1f0       : DOWN      1500 00:aa:a4:7e:8a:28  (NO-CARRIER,UP)               
+ ├ team0        : UP        1500 00:bb:a4:7d:8b:01  (UP,LOWER_UP)                 
+  ├ eno1        : UP        1500 00:cc:a4:70:8c:02  (UP,LOWER_UP)                 
+  ├ eno2        : UP        1500 00:dd:a4:71:8d:03  (UP,LOWER_UP)                 
+  ├ ens2f0      : UP        1500 00:ee:a4:72:8e:04  (UP,LOWER_UP)                 
+  └ ens2f1      : UP        1500 00:a1:a4:73:81:05  (UP,LOWER_UP)                 
+ ├ ens1f1       : DOWN      1500 00:a2:a4:74:83:2a  (NO-CARRIER,UP)               
+ ├ vlan123      : UP        1500 00:a3:a4:75:85:37  (UP,LOWER_UP)    802.1Q(123)  192.168.10.20/24
+ └ vlan456      : UP        1500 00:a4:a4:76:87:24  (UP,LOWER_UP)    802.1Q(456)  10.100.100.1/24
 
 
 ```
