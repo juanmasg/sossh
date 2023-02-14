@@ -1,5 +1,6 @@
 import os
 import readline
+import subprocess
 
 
 class SosFilesystem:
@@ -40,7 +41,7 @@ class SosFilesystem:
 
     def run_cmd(self, cmd):
         try:
-            print(self.read_cmd(cmd))
+            return self.read_cmd(cmd)
         except FileNotFoundError:
             print(f"Command not found or options required `{cmd}`")
             cmd = cmd.strip()
@@ -152,7 +153,15 @@ class SosShell:
             try:
                 prompt = f"{self._hostname}) "
                 cmd = input(prompt)
-                self._fs.run_cmd(cmd)
+                shell_pipe = None
+                if "|" in cmd:
+                    cmd, shell_pipe = [ x.strip() for x in cmd.split("|",1) ]
+                cmd_output = self._fs.run_cmd(cmd)
+                if shell_pipe:
+                    subprocess.run(shell_pipe,
+                            input=cmd_output.encode(), shell=True)
+                else:
+                    print(cmd_output)
             except EOFError:
                 print("EOF!")
                 return
@@ -171,7 +180,7 @@ if __name__ == '__main__':
         #sosfs.run("ip -d address")
 
         try:
-            sosfs.run_cmd(args.command)
+            print(sosfs.run_cmd(args.command))
         except FileNotFoundError:
             pass
     else:
