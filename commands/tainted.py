@@ -1,3 +1,5 @@
+import os
+
 from .base import BaseCommand
 
 class Tainted(BaseCommand):
