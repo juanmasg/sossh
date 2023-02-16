@@ -16,12 +16,13 @@ from commands.help import Help
 from commands.tainted import Tainted
 from commands.packages import Packages
 from commands.sysinfo import SysInfo
-from commands.banner import Banner
 from commands.firewalld_explain import FirewalldExplain
 from commands.dmidecode import Dmi
 from commands.sysctl import Sysctl
 from commands.services import Services
 from commands.ethtool import Ethtool
+from commands.osinfo import OSInfo
+from commands.cmdgroup import CmdGroup
 
 #from interface import InterfaceGroup
 
@@ -215,12 +216,13 @@ class SosWrapper(SosReport):
             Inet.name: Inet(self).run,
             Packages.name: Packages(self).run,
             SysInfo.name: SysInfo(self).run,
-            Banner.name: Banner(self).run,
             FirewalldExplain.name: FirewalldExplain(self).run,
             Dmi.name: Dmi(self).run,
             Sysctl.name: Sysctl(self).run,
             Services.name: Services(self).run,
             Ethtool.name: Ethtool(self).run,
+            OSInfo.name: OSInfo(self).run,
+            CmdGroup.name: CmdGroup(self).run,
         }
 
         self._cmds.update(self._internal_cmds)
@@ -294,7 +296,7 @@ class SosShell:
         readline.read_history_file(self._histfile)
 
         if banner:
-            self._sos.run_cmd("banner")
+            self._sos.run_cmd("cmdgroup banner")
 
     def loop(self):
         while True:
