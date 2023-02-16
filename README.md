@@ -9,8 +9,12 @@ The plan for now is to keep writing new commands that perform data pre-processin
 and display insights about the system, replacing the need to print the raw
 file contents. Think about a python based [xsos](https://github.com/ryran/xsos)
 on steroids.
+
 I'll fix bugs, add core functionality or change the internal design as it's
 needed depending on what the command implementations need.
+
+My primary focus is network troubleshooting, so in these early stages most
+of my work will be around networking related commands.
 
 
 ### Usage
