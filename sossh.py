@@ -19,6 +19,8 @@ from commands.sysinfo import SysInfo
 from commands.banner import Banner
 from commands.firewalld_explain import FirewalldExplain
 from commands.dmidecode import Dmi
+from commands.sysctl import Sysctl
+from commands.services import Services
 
 #from interface import InterfaceGroup
 
@@ -215,9 +217,9 @@ class SosWrapper(SosReport):
             Banner.name: Banner(self).run,
             FirewalldExplain.name: FirewalldExplain(self).run,
             Dmi.name: Dmi(self).run,
+            Sysctl.name: Sysctl(self).run,
+            Services.name: Services(self).run,
         }
-
-        print(self._internal_cmds)
 
         self._cmds.update(self._internal_cmds)
 
