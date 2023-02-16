@@ -1,4 +1,5 @@
 from .printer import Printer
+from .list import ListPrinter
 
 class TreePrinter(Printer):
     _step = 2
@@ -13,19 +14,16 @@ class TreePrinter(Printer):
         prefix = f"{(level+1 * self._step)*' '}{self._prefixes[level]}"
         if kwargs:
             for k, v in kwargs.items():
-                print(f"{prefix} {k}")
                 if v and isinstance(v, list):
+                    print(f"{prefix} {k}")
                     self.print("", *v, level=level+1)
                 elif v and isinstance(v, dict):
+                    print(f"{prefix} {k}")
                     self.print("", level=level+1, **v)
                 elif callable(v):
-                    print(v())
-                elif isinstance(v, str):
-                    print(v)
-                elif v:
-                    print(v)
+                    print(f"{prefix} {k}: {v()}")
                 else:
-                    print("NO V!", v)
+                    print(f"{prefix} {k}: {v}")
         elif args:
             for k in args:
                 print(f"{prefix} {k}")
