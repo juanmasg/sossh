@@ -21,6 +21,7 @@ from commands.firewalld_explain import FirewalldExplain
 from commands.dmidecode import Dmi
 from commands.sysctl import Sysctl
 from commands.services import Services
+from commands.ethtool import Ethtool
 
 #from interface import InterfaceGroup
 
@@ -219,6 +220,7 @@ class SosWrapper(SosReport):
             Dmi.name: Dmi(self).run,
             Sysctl.name: Sysctl(self).run,
             Services.name: Services(self).run,
+            Ethtool.name: Ethtool(self).run,
         }
 
         self._cmds.update(self._internal_cmds)
