@@ -14,7 +14,7 @@ I'll fix bugs, add core functionality or change the internal design as it's
 needed depending on what the command implementations need.
 
 My primary focus is network troubleshooting, so in these early stages most
-of my work will be around networking related commands.
+of my work will be on networking related commands.
 
 
 ### Usage
