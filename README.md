@@ -2,10 +2,16 @@
 
 ### Project status
 
-This has just started. Once the main shell functionality is robust enough,
-the plan is to write new commands that perform data pre-processing and
-display insights about the system, replacing the need to print the raw
-file contents. Think about a python based `xsos` on steroids.
+The software is functional, but it's still in its early stages and work
+right now is mainly focused on functionality rather than stability or bugfixes.
+Things might change internally without prior notice, and bugs are expected.
+The plan for now is to keep writing new commands that perform data pre-processing
+and display insights about the system, replacing the need to print the raw
+file contents. Think about a python based [xsos](https://github.com/ryran/xsos)
+on steroids.
+I'll fix bugs, add core functionality or change the internal design as it's
+needed depending on what the command implementations need.
+
 
 ### Usage
 
@@ -14,7 +20,7 @@ file contents. Think about a python based `xsos` on steroids.
 usage: sossh.py [-h] [-N] [-c COMMAND] <path/to/sosreport/file/or/directory>
 
 positional arguments:
-  sospath
+  </path/to/sosreport/file/or/directory>
 
 optional arguments:
   -h, --help            show this help message and exit
