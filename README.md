@@ -55,6 +55,14 @@ optional arguments:
 * `tainted`: Display extended tainted information
 * `packages`: Display third party package information
 * `inet`: Display ipv4 info
+* `banner`: Display a summary of the system
+* `dmi`: Display a summary from dmidecode
+* `firewalld_explain`: Run [firewalld_explain](https://github.com/juanmasg/firewalld-explain.git) if it exists in the path
+* `help`: Display available commands 
+* `_sysctl`: Display some potentially problematic sysctls
+* `_services`: Display all (known) security related services
+* `_ethtool`: 
+* `ifcfg`: 
 
 ### Example
 
