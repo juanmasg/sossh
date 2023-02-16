@@ -46,7 +46,7 @@ class Dmi(BaseCommand):
                 lvl0 = cur_lvl[0]
                 if ": " in line:
                     dmidecode[lvl0].__setitem__(*[ x.strip() for x in
-                        line.split(": ")])
+                        line.split(": ", 1)])
                 else:
                     dmidecode[lvl0][line] = {}
 
