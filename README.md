@@ -28,8 +28,16 @@ optional arguments:
 * Transparently open sosreports from tar files in memory, without extracting
   the contents
 
-* Access the `sos_commands` output as if they were run locally (`cat` or
-  complete file path not needed anymore).
+* Access the `sos_commands` output as if they were run locally. In other
+  words, I prefer to check the network interfaces by writing this:
+  ```
+  sossh) ip -d address
+  ```
+
+  than this:
+  ```
+  $ cat sos_commands/networking/ip_-d_address
+  ```
 
 * Readline integration with command line history and tab completion for the
   commands under `sos_commands/`
