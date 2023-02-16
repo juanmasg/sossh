@@ -15,6 +15,10 @@ from commands.cat import Cat
 from commands.help import Help
 from commands.tainted import Tainted
 from commands.packages import Packages
+from commands.sysinfo import SysInfo
+from commands.banner import Banner
+from commands.firewalld_explain import FirewalldExplain
+from commands.dmidecode import Dmi
 
 #from interface import InterfaceGroup
 
@@ -99,9 +103,13 @@ class SosTarfile(SosDirectory):
 class SosReport:
 
     sosdir = None
+    _sospath = None
     _cmds = {}
 
     def __init__(self, root):
+        abspath = os.path.abspath(root)
+        basename = os.path.basename(abspath)
+        self._sospath = basename
 
         if mimetypes.guess_type(root)[0] == "application/x-tar":
             self.sosdir = SosTarfile(root)
@@ -110,6 +118,37 @@ class SosReport:
 
         self._cmds = {}
         self._cache_cmds(root)
+
+
+    @property
+    def _cmdline(self):
+        return self.read("/proc/cmdline").strip()
+
+    @property
+    def _release(self):
+        return self.read("/etc/redhat-release").strip()
+
+    @property
+    def _uname(self):
+        return self.read("uname").strip()
+
+    @property
+    def _uptime(self):
+        return self.read("uptime").strip()
+
+    @property
+    def _date(self):
+        return self.read("date").split("\n")[0].strip()
+
+    @property
+    def _version(self):
+        ver = self.read("version.txt", remove_last=False).split("\n")
+        return ver[0]
+
+    @property
+    def _hostname(self):
+        return self.read("hostname")
+
 
     def read(self, *args, **kwargs):
         return self.sosdir.read(*args, **kwargs)
@@ -163,15 +202,22 @@ class SosWrapper(SosReport):
 
         super().__init__(path)
 
+
         self._internal_cmds = {
             #"links": Links(self).run,
-            "cat": Cat(self).run,
-            "help": Help(self).run,
-            "tainted": Tainted(self).run,
-            "drops": Drops(self).run,
-            "inet": Inet(self).run,
-            "packages": Packages(self).run,
+            Cat.name: Cat(self).run,
+            Help.name: Help(self).run,
+            Tainted.name: Tainted(self).run,
+            Drops.name: Drops(self).run,
+            Inet.name: Inet(self).run,
+            Packages.name: Packages(self).run,
+            SysInfo.name: SysInfo(self).run,
+            Banner.name: Banner(self).run,
+            FirewalldExplain.name: FirewalldExplain(self).run,
+            Dmi.name: Dmi(self).run,
         }
+
+        print(self._internal_cmds)
 
         self._cmds.update(self._internal_cmds)
 
@@ -223,30 +269,14 @@ class SosShell:
 
     _histfile = f"{os.environ.get('HOME')}/.sossh_history"
 
-    _hostname = None
-    _version = None
-    _date = None
-    _uname = None
-    _uptime = None
-    _cmdline = None
-    _release = None
-
     _sos = None
-    _sospath = None
 
     def __init__(self, sospath, banner=True):
-        self._sospath = sospath
         self._sos = SosWrapper(sospath)
         try:
-            self._read_version()
-            print(f"Sosreport found: {self._version}")
-            self._read_hostname()
-            self._read_date()
-            self._read_uname()
-            self._read_uptime()
-            self._read_cmdline()
-            self._read_release()
+            print(f"Sosreport found: {self._sos._version}")
         except Exception as e:
+            import traceback; traceback.print_exc()
             print(f"This doesn't seem like a sosreport `{e}`")
 
         readline.parse_and_bind("tab: complete")
@@ -260,52 +290,12 @@ class SosShell:
         readline.read_history_file(self._histfile)
 
         if banner:
-            self.banner()
-
-    def banner(self):
-
-        banner_data = {
-            "Path": self._sospath,
-            "Generated": self._date,
-            "Hostname": self._hostname,
-            "Uname": self._uname,
-            "Uptime": self._uptime,
-            "Cmdline": self._cmdline,
-            "Release": self._release,
-            "Tainted": self._sos.run_cmd("tainted"),
-        }
-
-        print("")
-        for k, v in banner_data.items():
-            print(f"  {k:16s}: {v.strip()}")
-
-        print("")
-
-    def _read_cmdline(self):
-        self._cmdline = self._sos.read("/proc/cmdline")
-
-    def _read_release(self):
-        self._release = self._sos.read("/etc/redhat-release")
-
-    def _read_uname(self):
-        self._uname = self._sos.read("uname")
-
-    def _read_uptime(self):
-        self._uptime = self._sos.read("uptime")
-
-    def _read_date(self):
-        self._date = self._sos.read("date").split("\n")[0]
-
-    def _read_version(self):
-        self._version = self._sos.read("version.txt", remove_last=False)
-
-    def _read_hostname(self):
-        self._hostname = self._sos.read("hostname")
+            self._sos.run_cmd("banner")
 
     def loop(self):
         while True:
             try:
-                prompt = f"\033[4m{self._hostname}\033[0m\U0001f198 "
+                prompt = f"\n\033[4m{self._sos._hostname}\033[0m\U0001f198 "
                 cmd = input(prompt)
                 shell_pipe = None
                 if "|" in cmd:
@@ -351,7 +341,8 @@ if __name__ == '__main__':
         sos = SosWrapper(args.sospath)
         output = sos.run_cmd(args.command)
         if output:
-            print(output.decode())
+            print(output)
+            #print(output.decode())
     else:
         sh = SosShell(args.sospath, banner=not args.no_banner)
         sh.loop()
