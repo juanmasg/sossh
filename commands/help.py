@@ -3,10 +3,10 @@ class Help(BaseCommand):
     name = "help"
 
     def run(self, *args):
-        underscored = "_".join(args)
+        cmdline = " ".join(args)
         for cmd in self._sos._cmds:
-            if cmd.startswith(underscored):
-                print(cmd.replace("_", " "))
+            if cmd.startswith(cmdline):
+                print(cmd)
 
 
 
