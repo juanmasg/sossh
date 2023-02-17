@@ -109,8 +109,16 @@ class SosReport:
 
     sosdir = None
     _sospath = None
-    _cmds = {}
-    _cmdtree = {}
+    _cmds = None
+    _cmdtree = None
+
+    #_ver_manifest = {
+    #    "3.6": self._cache_cmds_from_sos_txt,
+    #    "3.7": self._cache_cmds_from_sos_txt,
+    #    "3.8": self._cache_cmds_from_sos_json,
+    #    "3.9": self._cache_cmds_from_sos_json,
+    #    "4.0": self._cache_cmds_from_manifest_json,
+    #}
 
     def __init__(self, root):
         abspath = os.path.abspath(root)
@@ -123,7 +131,7 @@ class SosReport:
             self.sosdir = SosDirectory(root)
 
         self._cmds = {}
-        self._cache_cmds_from_json()
+        self._cmdtree = {}
 
 
     @property
@@ -159,7 +167,38 @@ class SosReport:
     def read(self, *args, **kwargs):
         return self.sosdir.read(*args, **kwargs)
 
-    def _cache_cmds_from_json(self):
+    def find_manifest_loader(self):
+        for _, _, files in self.sosdir.walk("/sos_reports"):
+            if "manifest.json" in files:
+                return self._cache_cmds_from_manifest_json
+            elif "sos.json" in files:
+                return self._cache_cmds_from_sos_json
+            elif "sos.txt" in files:
+                return self._cache_cmds_from_sos_txt
+            
+    def _cache_cmds_from_sos_txt(self):
+        pass
+
+    def _cache_cmds_from_sos_json(self):
+        mf = json.load(self.sosdir.open("/sos_reports/sos.json"))
+        for plugin_data in mf:
+            name, plugin = plugin_data
+            if not "commands" in plugin:
+                continue
+
+            for cmd in plugin["commands"]:
+                print("NAME", name, "PLUGIN", cmd)
+                cmd_exec = cmd["name"]
+                cmd_filepath = cmd["href"]
+                self._cmds[cmd_exec] = cmd_filepath
+                words = cmd_exec.split(" ")
+                tree_cur = self._cmdtree
+                for word in words:
+                    if word not in tree_cur:
+                        tree_cur[word] = {}
+                    tree_cur = tree_cur[word]
+
+    def _cache_cmds_from_manifest_json(self):
         mf = json.load(self.sosdir.open("/sos_reports/manifest.json"))
         _ver = mf["version"]
         plugins = mf["components"]["report"]["plugins"]
@@ -279,6 +318,10 @@ class SosShell:
         self._sos = SosWrapper(sospath)
         try:
             print(f"Sosreport found: {self._sos._version}")
+            manifest_loader = self._sos.find_manifest_loader()
+            if manifest_loader:
+                print(f"Loading manifest {manifest_loader}")
+                manifest_loader()
         except Exception as e:
             import traceback; traceback.print_exc()
             print(f"This doesn't seem like a sosreport `{e}`")
