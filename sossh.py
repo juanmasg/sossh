@@ -175,10 +175,61 @@ class SosReport:
                 return self._cache_cmds_from_sos_json
             elif "sos.txt" in files:
                 return self._cache_cmds_from_sos_txt
+            else:
+                return lambda: print("No manifest found")
             
     def _cache_cmds_from_sos_txt(self):
-        mf = self.sosdir.open("/sos_reports/sos.txt").split("\n")
-        print("MF", mf)
+        mf = self.sosdir.open("/sos_reports/sos.txt").read().decode().split("\n")
+
+        all_sos_commands_files = []
+        for root, dirs, files in self.sosdir.walk("sos_commands"):
+            for f in files:
+                all_sos_commands_files.append(f"{root}/{f}")
+
+        cur_plugin = None
+        cur_section = None
+        for line in mf:
+            line = line.strip()
+            if line.startswith("====="):
+                continue
+            elif line.startswith("-  commands executed"):
+                cur_section = "commands"
+            elif line.startswith("-  files copied"):
+                cur_section = "copied"
+            elif line.startswith("-  files created"):
+                cur_section = "created"
+            elif line.startswith("*"):
+                if cur_section != "commands":
+                    continue
+
+                cmd_exec = line.split("*", 1)[1].strip()
+                cmd_filepath = None
+                #filepath = cmd_exec.replace(" ", "_")
+                #filepath = filepath.replace(",", "_")
+                filepath = re.sub("[ ,]", "_", cmd_exec)
+                filepath = re.sub("/", ".", filepath)
+                #filepath = filepath.replace("/", ".")
+                filepath = re.sub("[\"\'\{\}]", ".", filepath)
+                #filepath = filepath.replace('"', "")
+                #filepath = filepath.replace("'", "")
+                #filepath = filepath.replace("}", "")
+                #filepath = filepath.replace("{", "")
+
+                for f in all_sos_commands_files:
+                    if f.endswith(filepath):
+                        cmd_filepath = f
+                        break
+
+                if not cmd_filepath:
+                    print(f"Couldn't find path for command {cmd_exec}")
+                    continue
+
+                self._cmds[cmd_exec] = cmd_filepath
+
+            else:
+                #print(f"Don't know how to handle line `{line}`")
+                cur_plugin = line
+            
 
     def _cache_cmds_from_sos_json(self):
         mf = json.load(self.sosdir.open("/sos_reports/sos.json"))
