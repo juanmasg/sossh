@@ -242,7 +242,7 @@ class SosShell:
             self._tree = tree
 
         def _walk(self, words, tree):
-            print("WALK!", words, tree.keys())
+            #print("WALK!", words, tree.keys())
             if not tree:
                 return []
 
