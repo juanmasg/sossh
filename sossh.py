@@ -2,6 +2,7 @@
 
 import os
 import re
+import json
 import readline
 import subprocess
 import mimetypes
@@ -109,6 +110,7 @@ class SosReport:
     sosdir = None
     _sospath = None
     _cmds = {}
+    _cmdtree = {}
 
     def __init__(self, root):
         abspath = os.path.abspath(root)
@@ -121,7 +123,7 @@ class SosReport:
             self.sosdir = SosDirectory(root)
 
         self._cmds = {}
-        self._cache_cmds(root)
+        self._cache_cmds_from_json()
 
 
     @property
@@ -157,46 +159,37 @@ class SosReport:
     def read(self, *args, **kwargs):
         return self.sosdir.read(*args, **kwargs)
 
-    def _cache_cmds(self, path):
-        for root, dirs, files in self.sosdir.walk("/sos_commands"):
-            for filename in files:
-                self._cmds[filename] = f"{root}/{filename}"
-
-    def _underscored(self, cmd):
-        return " ".join([x for x in cmd.split(" ") if x]).replace(" ", "_")
+    def _cache_cmds_from_json(self):
+        mf = json.load(self.sosdir.open("/sos_reports/manifest.json"))
+        _ver = mf["version"]
+        plugins = mf["components"]["report"]["plugins"]
+        for name, plugin in plugins.items():
+            for cmd in plugin["commands"]:
+                cmd_exec = cmd["exec"]
+                cmd_filepath = cmd["filepath"]
+                self._cmds[cmd_exec] = cmd_filepath
+                words = [cmd["command"]] + cmd["parameters"]
+                tree_cur = self._cmdtree
+                for word in words:
+                    if word not in tree_cur:
+                        tree_cur[word] = {}
+                    tree_cur = tree_cur[word]
 
     def _resolve_cmd(self, cmd):
-        underscored = self._underscored(cmd)
-
-        if underscored not in self._cmds:
-            #print(f"Unknown command `{cmd}` ({underscored})")
+        if cmd not in self._cmds:
             raise FileNotFoundError
 
-        return self._cmds.get(underscored)
+        return self._cmds.get(cmd)
 
     def read_cmd(self, cmd):
         dest = self._resolve_cmd(cmd)
-        #if callable(dest):
-        #    return dest(*cmd.split(" ")[1:])
-        #else:
         return self.read(dest)
 
     def run_cmd(self, cmd):
-        return self.read_cmd(cmd)
+        return self.read_cmd(cmd.strip())
 
     def get_cmd_tree(self):
-        tree = {}
-        for cmd in self._cmds.keys():
-            words = cmd.split("_")
-            cur = tree
-            for i, word in enumerate(words):
-                if word not in cur:
-                    cur[word] = {}
-                cur = cur[word]
-
-        #import json
-        #print(json.dumps(tree, indent=2))
-        return tree
+        return self._cmdtree
 
 class SosWrapper(SosReport):
 
@@ -243,15 +236,16 @@ class SosWrapper(SosReport):
 
 class SosShell:
 
-    class Completer:
+    class TreeCompleter:
         _tree = None
         def __init__(self, tree):
             self._tree = tree
 
         def _walk(self, words, tree):
-            #print("WALK!", words, tree.keys())
+            print("WALK!", words, tree.keys())
             if not tree:
                 return []
+
             elif len(words) == 0:
                 return [x for x in tree.keys()]
 
@@ -267,10 +261,14 @@ class SosShell:
         def complete(self, text, state):
             words = [x for x in readline.get_line_buffer().split(" ") if x ]
             #print(f"WORDS '{words}'")
-            ret = self._walk(words, self._tree) + [None]
+            ret = self._walk(words, self._tree)
+            #while len(ret) == 1:
+            #    word = ret[0])
+            #    if 
+            #    ret[0]
+            ret.append(None)
             #print(f"RET '{ret}'")
             return ret[state]
-
 
 
     _histfile = f"{os.environ.get('HOME')}/.sossh_history"
@@ -287,7 +285,9 @@ class SosShell:
 
         readline.parse_and_bind("tab: complete")
         readline.set_completer(
-                SosShell.Completer(self._sos.get_cmd_tree()).complete)
+                SosShell.TreeCompleter(self._sos.get_cmd_tree()).complete)
+                #SosShell.ListCompleter([ x.replace("_", " ") \
+                #        for x in self._sos._cmds.keys()]).complete)
 
         readline.set_auto_history("True")
         if not os.path.exists(self._histfile):
