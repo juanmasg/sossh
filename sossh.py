@@ -239,7 +239,6 @@ class SosReport:
                 continue
 
             for cmd in plugin["commands"]:
-                print("NAME", name, "PLUGIN", cmd)
                 cmd_exec = cmd["name"]
                 cmd_filepath = cmd["href"].split("/", 1)[1]
                 self._cmds[cmd_exec] = cmd_filepath
