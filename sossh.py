@@ -177,7 +177,8 @@ class SosReport:
                 return self._cache_cmds_from_sos_txt
             
     def _cache_cmds_from_sos_txt(self):
-        pass
+        mf = self.sosdir.open("/sos_reports/sos.txt").split("\n")
+        print("MF", mf)
 
     def _cache_cmds_from_sos_json(self):
         mf = json.load(self.sosdir.open("/sos_reports/sos.json"))
@@ -189,7 +190,7 @@ class SosReport:
             for cmd in plugin["commands"]:
                 print("NAME", name, "PLUGIN", cmd)
                 cmd_exec = cmd["name"]
-                cmd_filepath = cmd["href"]
+                cmd_filepath = cmd["href"].split("/", 1)[1]
                 self._cmds[cmd_exec] = cmd_filepath
                 words = cmd_exec.split(" ")
                 tree_cur = self._cmdtree
