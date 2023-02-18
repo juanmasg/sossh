@@ -24,6 +24,7 @@ from commands.services import Services
 from commands.ethtool import Ethtool
 from commands.osinfo import OSInfo
 from commands.cmdgroup import CmdGroup
+from commands.messages import Messages
 
 #from interface import InterfaceGroup
 
@@ -80,6 +81,7 @@ class SosTarfile(SosDirectory):
         if not self._walked:
             print(("Reading tarfile for the first time. "
                     "This might take a while..."))
+            self._walked = True
 
         root = self._fixpath(f"{self._tarroot}/{path}")
         tree = {}
@@ -97,8 +99,6 @@ class SosTarfile(SosDirectory):
             
         for k, v in tree.items():
             yield k, [], v
-
-        self._walked = True
 
     def open(self, path):
         filepath = self._fixpath(f"{self._tarroot}/{path}")
@@ -337,6 +337,7 @@ class SosWrapper(SosReport):
             Ethtool.name: Ethtool(self).run,
             OSInfo.name: OSInfo(self).run,
             CmdGroup.name: CmdGroup(self).run,
+            Messages.name: Messages(self).run,
         }
 
         self._cmds.update(self._internal_cmds)
