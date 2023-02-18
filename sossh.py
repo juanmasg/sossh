@@ -112,14 +112,6 @@ class SosReport:
     _cmds = None
     _cmdtree = None
 
-    #_ver_manifest = {
-    #    "3.6": self._cache_cmds_from_sos_txt,
-    #    "3.7": self._cache_cmds_from_sos_txt,
-    #    "3.8": self._cache_cmds_from_sos_json,
-    #    "3.9": self._cache_cmds_from_sos_json,
-    #    "4.0": self._cache_cmds_from_manifest_json,
-    #}
-
     def __init__(self, root):
         abspath = os.path.abspath(root)
         basename = os.path.basename(abspath)
@@ -173,10 +165,47 @@ class SosReport:
                 return self._cache_cmds_from_manifest_json
             elif "sos.json" in files:
                 return self._cache_cmds_from_sos_json
+            elif "sos.html" in files:
+                return self._cache_cmds_from_sos_html
             elif "sos.txt" in files:
                 return self._cache_cmds_from_sos_txt
             else:
                 return lambda: print("No manifest found")
+
+    def _cache_cmds_from_sos_html(self):
+        from html.parser import HTMLParser
+        class SOSHtmlParser(HTMLParser):
+            commands = {}
+            cur_tag = None
+            last_a_href = None
+
+            def handle_starttag(self, tag, attrs):
+                self.cur_tag = tag
+                if tag == "a":
+                    attrs = dict(attrs)
+                    if "href" in attrs and "/sos_commands/" in attrs["href"]:
+                        self.last_a_href = attrs["href"]
+
+                    
+            def handle_data(self, data):
+                if self.cur_tag == "a" and self.last_a_href:
+                    self.commands[data] = self.last_a_href
+                    self.last_a_href = None
+
+
+        parser = SOSHtmlParser() 
+        data = self.sosdir.open("sos_reports/sos.html").read()
+        parser.feed(data.decode())
+        parser.close()
+        for cmd_exec, href in parser.commands.items():
+            cmd_filepath = href.split("/", 1)[1]
+            self._cmds[cmd_exec] = cmd_filepath
+            words = cmd_exec.split(" ")
+            tree_cur = self._cmdtree
+            for word in words:
+                if word not in tree_cur:
+                    tree_cur[word] = {}
+                tree_cur = tree_cur[word]
             
     def _cache_cmds_from_sos_txt(self):
         mf = self.sosdir.open("/sos_reports/sos.txt").read().decode().split("\n")
@@ -215,7 +244,9 @@ class SosReport:
                 #filepath = filepath.replace("}", "")
                 #filepath = filepath.replace("{", "")
 
+                print("CMD EXEC", cmd_exec)
                 for f in all_sos_commands_files:
+                    #print("F", f, "FILEPATH", filepath)
                     if f.endswith(filepath):
                         cmd_filepath = f
                         break
