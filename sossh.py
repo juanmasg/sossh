@@ -96,7 +96,7 @@ class SosTarfile(SosDirectory):
                     tree[d] = []
 
                 tree[d].append(f)
-            
+
         for k, v in tree.items():
             yield k, [], v
 
@@ -186,7 +186,7 @@ class SosReport:
                     if "href" in attrs and "/sos_commands/" in attrs["href"]:
                         self.last_a_href = attrs["href"]
 
-                    
+
             def handle_data(self, data):
                 if self.cur_tag == "a" and self.last_a_href:
                     self.commands[data] = self.last_a_href
@@ -206,7 +206,9 @@ class SosReport:
                 if word not in tree_cur:
                     tree_cur[word] = {}
                 tree_cur = tree_cur[word]
-            
+
+        self._cmds = dict(sorted(self._cmds.items()))
+
     def _cache_cmds_from_sos_txt(self):
         mf = self.sosdir.open("/sos_reports/sos.txt").read().decode().split("\n")
 
@@ -260,7 +262,9 @@ class SosReport:
             else:
                 #print(f"Don't know how to handle line `{line}`")
                 cur_plugin = line
-            
+
+
+        self._cmds = dict(sorted(self._cmds.items()))
 
     def _cache_cmds_from_sos_json(self):
         mf = json.load(self.sosdir.open("/sos_reports/sos.json"))
@@ -280,6 +284,8 @@ class SosReport:
                         tree_cur[word] = {}
                     tree_cur = tree_cur[word]
 
+        self._cmds = dict(sorted(self._cmds.items()))
+
     def _cache_cmds_from_manifest_json(self):
         mf = json.load(self.sosdir.open("/sos_reports/manifest.json"))
         _ver = mf["version"]
@@ -296,6 +302,10 @@ class SosReport:
                         tree_cur[word] = {}
                     tree_cur = tree_cur[word]
 
+        self._cmds = dict(sorted(self._cmds.items()))
+
+
+
     def _resolve_cmd(self, cmd):
         if cmd not in self._cmds:
             raise FileNotFoundError
@@ -303,7 +313,9 @@ class SosReport:
         return self._cmds.get(cmd)
 
     def read_cmd(self, cmd):
+#        print(f" SosReport::read_cmd cmd:<{cmd}>")
         dest = self._resolve_cmd(cmd)
+#        print(f" SosReport::read_cmd dest:<{dest}>")
         return self.read(dest)
 
     def run_cmd(self, cmd):
@@ -349,27 +361,32 @@ class SosWrapper(SosReport):
             args = ""
         else:
             cmd0, args = args
-            
+
         if cmd0 in self._internal_cmds:
             return self._internal_cmds[cmd0](*args.split(" "))
         else:
+#            print(f"Before SUPER in SosWrapper, cmd: <{cmd}>")
             return super().read_cmd(cmd)
 
 
 class SosShell:
 
+    #
+    # --FIXME--, rsachere@redhat.com, there is something wrong here, it does not work 100% right
     class TreeCompleter:
         _tree = None
         def __init__(self, tree):
             self._tree = tree
 
         def _walk(self, words, tree):
-            #print("WALK!", words, tree.keys())
+#            print("WALK!", words, tree.keys())
             if not tree:
                 return []
 
             elif len(words) == 0:
-                return [x for x in tree.keys()]
+                ret_val = [x for x in tree.keys()]
+#                print("Walk! ret_val ", repr(ret_val))
+                return ret_val
 
             if words[0] in tree:
                 return self._walk(words[1:], tree[words[0]])
@@ -382,14 +399,15 @@ class SosShell:
 
         def complete(self, text, state):
             words = [x for x in readline.get_line_buffer().split(" ") if x ]
-            #print(f"WORDS '{words}'")
+#            print(f"WORDS '{words}'")#
+#            print(repr(self._tree))
             ret = self._walk(words, self._tree)
             #while len(ret) == 1:
             #    word = ret[0])
             #    if 
             #    ret[0]
-            ret.append(None)
-            #print(f"RET '{ret}'")
+#            ret.append(None)
+#            print(f"RET '{ret}'")
             return ret[state]
 
 
@@ -410,6 +428,8 @@ class SosShell:
             print(f"This doesn't seem like a sosreport `{e}`")
 
         readline.parse_and_bind("tab: complete")
+        readline.set_completer_delims(' ')
+#        print(repr(self._sos.get_cmd_tree()))
         readline.set_completer(
                 SosShell.TreeCompleter(self._sos.get_cmd_tree()).complete)
                 #SosShell.ListCompleter([ x.replace("_", " ") \
